@@ -36,7 +36,8 @@ last_depth = -1
 # a list of scripted commands, that are issued whenever the depth in the promt
 # increases: beware to only use commands that do not increase the depth here,
 # or you have programmed yourself a nice little infinte recursion
-depth_increase_replies = ["match.call(expand.dots=TRUE)\n"]
+depth_increase_replies = ["match.call(expand.dots=TRUE)\n",
+                          "pryr::call_tree(match.call(expand.dots=TRUE))\n"]
 
 if "--where" in sys.argv[2:]:
     depth_increase_replies.append("where\n")
