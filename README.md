@@ -1,13 +1,17 @@
 # R-debug-tracer
-A python script that automates pressing 's' for step-into while debugging in R, alternating the command with 'where'.
+A python script that automates pressing 's' for step-into while debugging in R, occasionally dropping in a 'match.call(expand.dots=TRUE)' and optionally also a 'where'.
 
 To run, you need to write an R script that sets up your desired environment and defines a function called `debug_main`,
 which contains all the code for which you would like to get a 'step-into'-trace. The script should activate debbuging on this function through `debug(debug_main)`. The last command of the script should be `debug_main()`. In order to obtain a trace, you have to start the `R-debug-tracer.py`-script with the setup file path as first parameter. 
 
+
+_Caveat:_ In R, you may redirect any output using functions like `sink` or `capture.output`. Unfortunately, this also redirects the trace output we obtain from the debugger. Therefore, please make sure that the traced code does not make use of these facilities. A warning is issued if we capture `sink(...)` in the output.
+
+
 The file `debug-demo.r` contains an example of a setup script. In order to invoke the trace and save a copy to a file, you would run
 
 ```bash
-python3 R-debug-tracer.py debug-demo.r | tee debug-demo.trace
+python3 R-debug-tracer.py debug-demo.r | tee /dev/tty | gzip --stdout > debug-demo.trace.gz
 ```
 
 from the repository main directory. This produces output similar to
