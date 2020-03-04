@@ -1,5 +1,5 @@
 # R-debug-tracer
-A python script that automates pressing 's' for step-into while debugging in R, occasionally dropping in a 'match.call(expand.dots=TRUE)' and optionally also a 'where'.
+A python script that automates pressing `s` for step-into while debugging in R, occasionally dropping in a `match.call(expand.dots=TRUE)` and optionally also a `where`.
 
 To run, you need to write an R script that sets up your desired environment and defines a function called `debug_main`,
 which contains all the code for which you would like to get a 'step-into'-trace. The script should activate debbuging on this function through `debug(debug_main)`. The last command of the script should be `debug_main()`. In order to obtain a trace, you have to start the `R-debug-tracer.py`-script with the setup file path as first parameter. 
