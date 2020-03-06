@@ -6,11 +6,12 @@ from time import sleep
 import re
 import sys
 
-if len(sys.argv) != 2:
+if "--help" in sys.argv:
     print(f"Usage: {sys.argv[0]} [R-script] [--where]")
     print(f"  where")
-    print(f"    [R-script]  is the path to an R script that starts debugging.")
-    print(f"    --where     enable the where command on step-into. Nice for debugging.")
+    print(f"    [R-script]   is the path to an R script that starts debugging.")
+    print(f"    --where      enable the where command on step-into. Nice for debugging.")
+    print(f"    --just-warn  only warn when we find a call to sink")
     sys.exit()
     
 with open(sys.argv[1],"rt") as f:
@@ -107,10 +108,12 @@ while R.poll() is None:
                 write_buffer += end_reply
         # throw away the used up read buffer
         if sink_warning.search(read_buffer[:rb_process_idx]):
-            print(f"!!![TRACER]")
+            print(f"\n!!![TRACER]")
             print(f"!!![TRACER] WARNING: found sink(..) in R output")
             print(f"!!![TRACER]  PLEASE NOTE THAT CALLS TO sink (and other functions like capture.output) WILL INTERFERE WITH THE TRACE!")
             print(f"!!![TRACER]")
+            if not "--just-warn" in sys.argv[2:]:
+                sys.exit(1)
         read_buffer = read_buffer[rb_process_idx:]
         rb_process_idx = 0
         continue
