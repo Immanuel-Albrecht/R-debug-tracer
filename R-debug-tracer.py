@@ -19,7 +19,7 @@ with open(sys.argv[1],"rt") as f:
 R = Popen(["R","--no-save"],stdin=PIPE,stdout=PIPE,stderr=STDOUT)
 
 
-
+current_debug_command_marker = re.compile(r"debug(| at [^:]+): ")
 prompt = re.compile(r"Browse\[([0-9]+)]>")
 end_marker = re.compile(r"exiting from: debug_main\(\)")
 
@@ -31,6 +31,8 @@ rb_process_idx = 0
 # a list of commands that are cycled throughout the debug session
 interactive_replies = ["s\n"]
 reply_idx = 0
+
+command_start_marker = -1
 
 last_depth = -1
 # a list of scripted commands, that are issued whenever the depth in the promt
@@ -57,9 +59,18 @@ while R.poll() is None:
         sys.stdout.write(R_out)
         sys.stdout.flush()
         read_buffer += R_out
+        match = current_debug_command_marker.search(read_buffer[rb_process_idx:])
+        if match:
+            command_start_marker = rb_process_idx + match.span()[-1]
+
         match = prompt.search(read_buffer[rb_process_idx:])
         if match: #we just read the interactive prompt, and we are going to react to it
             rb_process_idx += match.span()[1]
+            if command_start_marker >= 0:
+                current_debug_command = read_buffer[command_start_marker:rb_process_idx - (match.span()[1] - match.span()[0])]
+                command_start_marker = -1
+                if current_debug_command.strip():
+                    reply_buffer.append("pryr::call_tree( x=quote( ( "+current_debug_command+" ) ), width=10000)\n")
             depth = int(match.groups()[0])
             if depth > last_depth:
                 reply_buffer.extend(depth_increase_replies)
