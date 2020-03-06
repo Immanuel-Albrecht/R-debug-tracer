@@ -68,9 +68,27 @@ while R.poll() is None:
             rb_process_idx += match.span()[1]
             if command_start_marker >= 0:
                 current_debug_command = read_buffer[command_start_marker:rb_process_idx - (match.span()[1] - match.span()[0])]
+                #
+                # There is a minor glitch: sometimes, after 'debug:' there is a value printed,
+                # which results in all kinds of errors and possibly also undefined behaviour...
+                #
+                # Browse[7]> s
+                # exiting from: validmu(mu)
+                # debugging in: valideta(eta)
+                # debug: [1] TRUE
+                # Browse[7]> pryr::call_tree( x=quote( ( [1] TRUE
+                # Error: unexpected '[' in "pryr::call_tree( x=quote( ( ["
+                # Browse[7]>  ) ), width=10000)
+                # Error: unexpected ')' in " )"
+                #
+                # This will also cause more problems downstream, because we will then read additional prompts
+                # and get out of sync with the scripted responses!
+                # TODO: FIX ^^ THIS ^^
+                #
                 command_start_marker = -1
                 if current_debug_command.strip():
                     reply_buffer.append("pryr::call_tree( x=quote( ( "+current_debug_command+" ) ), width=10000)\n")
+                    
             depth = int(match.groups()[0])
             if depth > last_depth:
                 reply_buffer.extend(depth_increase_replies)
